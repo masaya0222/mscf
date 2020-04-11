@@ -32,5 +32,5 @@ def get_basis(basisname):
                 i -= 1
                 break
             for j, s in enumerate(l[i].split()):
-                basis[symbol[0]][-1][j + 1].append(s)
+                basis[symbol[0]][-1][j + 1].append(float(s))
     return basis
