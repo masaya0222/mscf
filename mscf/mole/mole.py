@@ -9,14 +9,28 @@ class Mole:
         basis = get_basis(basis)
         for l in atoms:
             self.basis.extend(format_basis(l, basis[l[0]]))
+        self.basis_num = count_basis(self.basis)
 
 
 def format_basis(atoms, basis):
-    l = []
+    l = [[]]
     for b in basis:
         if b[0] == 'S':
-            l.append([atoms[1:]] + [0, b[1], b[2]])
+            l[0].append([atoms[1:]] + [0, b[1], b[2]])
         elif b[0] == 'SP':
-            l.append([atoms[1:]] + [0, b[1], b[2]])
-            l.append([atoms[1:]] + [1, b[1], b[3]])
+            if len(l) <= 1:
+                l.append([])
+            l[0].append([atoms[1:]] + [0, b[1], b[2]])
+            l[1].append([atoms[1:]] + [1, b[1], b[3]])
+    l = sum(l, [])
     return l
+
+
+def count_basis(basis):
+    num = 0
+    for b in basis:
+        num += b[1] * 2 + 1
+    return num
+
+
+
