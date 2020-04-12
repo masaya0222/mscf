@@ -14,7 +14,7 @@ class IntegralTestCase(unittest.TestCase):
         S_ab = ovlp_integral.S_ab(basis_a, basis_b)
         S_ba = ovlp_integral.S_ab(basis_b, basis_a)
         S_bb = ovlp_integral.S_ab(basis_b, basis_b)
-        rel_tol = 1e-6 #厳しいかも
+        rel_tol = 1e-6 #厳しいかもo
         self.assertTrue(isclose(S_aa[0][0][0][0], 1.0, rel_tol=rel_tol))
         self.assertTrue(isclose(S_ab[0][0][0][0], 0.6593182, rel_tol=rel_tol))
         self.assertTrue(isclose(S_ba[0][0][0][0], 0.6593182, rel_tol=rel_tol))

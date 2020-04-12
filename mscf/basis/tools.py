@@ -34,3 +34,4 @@ def get_basis(basisname):
             for j, s in enumerate(l[i].split()):
                 basis[symbol[0]][-1][j + 1].append(float(s))
     return basis
+

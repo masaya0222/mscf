@@ -11,12 +11,12 @@ class Mole:
             self.basis.extend(format_basis(l, basis[l[0]]))
 
 
-def format_basis(atoms, basis, ):
+def format_basis(atoms, basis):
     l = []
     for b in basis:
         if b[0] == 'S':
             l.append([atoms[1:]] + [0, b[1], b[2]])
         elif b[0] == 'SP':
             l.append([atoms[1:]] + [0, b[1], b[2]])
-            l.append([atoms[1:]] + [1, b[1], b[2]])
+            l.append([atoms[1:]] + [1, b[1], b[3]])
     return l
