@@ -22,6 +22,10 @@ def format_basis(atoms, basis):
                 l.append([])
             l[0].append([atoms[1:]] + [0, b[1], b[2]])
             l[1].append([atoms[1:]] + [1, b[1], b[3]])
+        elif b[0] == "D":
+            if len(l) <= 2:
+                l.append([])
+            l[2].append([atoms[1:]] + [2, b[1], b[2]])
     l = sum(l, [])
     return l
 
@@ -31,6 +35,7 @@ def count_basis(basis):
     for b in basis:
         num += b[1] * 2 + 1
     return num
+
 
 
 

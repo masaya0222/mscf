@@ -24,6 +24,8 @@ def get_basis(basisname):
             basis[symbol[0]].append([symbol[1], [], []])
         elif symbol[1] == "SP":
             basis[symbol[0]].append([symbol[1], [], [], []])
+        elif symbol[1] == "D":
+            basis[symbol[0]].append([symbol[1], [], []])
 
         while i < len(l):
             i += 1

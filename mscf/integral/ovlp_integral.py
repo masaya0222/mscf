@@ -14,21 +14,21 @@ def S_ij(I, J, Ax, Bx, ai, bi):
     Xpa = Px - Ax
     # Xpb = Px - Bx
     Xab = Ax - Bx
-    S = [[0 for j in range(J + 1)] for i in range(I + 2)]
+    S = [[0 for j in range(J + 1)] for i in range(I + J + 1)]
 
     S[0][0] = np.sqrt(np.pi / p) * np.exp(-mu * Xab ** 2)
-    for i in range(I + 1):
+    for i in range(I + J):
         S[i + 1][0] = Xpa * S[i][0] + (1 / (2.0 * p)) * (i * S[i - 1][0])
     for j in range(J):
-        for i in range(I + 2):
-            if j == J - 1 and i == I + 1:
+        for i in range(I + J ):
+            if i + j >= I + J + 1:
                 continue
             S[i][j + 1] = S[i + 1][j] + Xab * S[i][j]
     S = S[:I + 1]
     return S
 
 
-def S_ab(basis_a, basis_b):
+def cont_Sij(basis_a, basis_b):
     Ra, I, a, da = basis_a
     Rb, J, b, db = basis_b
     w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4
@@ -51,17 +51,17 @@ def S_ab(basis_a, basis_b):
                         for q in range(len(b)):
                             ans = da[p] * db[q] * Sij[p][q][i][j] * Skl[p][q][k][l] * Smn[p][q][m][n]
                             Na = (2 * a[p] / np.pi) ** (3 / 4.0) * np.sqrt(
-                                ((4 * a[p]) ** I) / (w_fact[i] * w_fact[k] * w_fact[m]))
+                                ((4 * a[p]) ** I) / (w_fact[I]))  # (w_fact[i] * w_fact[k] * w_fact[m]))
                             Nb = (2 * b[q] / np.pi) ** (3 / 4.0) * np.sqrt(
-                                ((4 * b[q]) ** J) / (w_fact[j] * w_fact[l] * w_fact[n]))
-
+                                ((4 * b[q]) ** J) / (w_fact[J]))  # (w_fact[j] * w_fact[l] * w_fact[n]))
                             ans *= Na * Nb
+
                             Sab[i][j][k][l] += ans
     return Sab
 
 
 def S_lm(basis_a, basis_b):
-    Sab = S_ab(basis_a, basis_b)
+    Sab = cont_Sij(basis_a, basis_b)
     Ra, la, a, da = basis_a
     Rb, lb, b, db = basis_b
     L = max(la, lb)
@@ -84,12 +84,6 @@ def S_lm(basis_a, basis_b):
         for j in range(2 * lb + 1):
             ma, mb = i - la, j - lb
             ma_, mb_ = abs(ma), abs(mb)
-            vma, vmb = 0, 0
-            if ma < 0:
-                vma = 1 / 2.0
-            if mb < 0:
-                vmb = 1 / 2.0
-
             Nma = (1.0 / (2 ** ma_ * fact[la])) * np.sqrt(2 * fact[la + ma_] * fact[la - ma_] / (2.0 - (ma != 0)))
             Nmb = (1.0 / (2 ** mb_ * fact[lb])) * np.sqrt(2 * fact[lb + mb_] * fact[lb - mb_] / (2.0 - (mb != 0)))
 
@@ -100,7 +94,7 @@ def S_lm(basis_a, basis_b):
                             flag = False
                             for va in range(ma_ // 2 + 1):
                                 for vb in range(mb_ // 2 + 1):
-                                    f = -2 * (va + vb % 2) + 1
+                                    f = -2 * ((va + vb) % 2) + 1
                                     if ma < 0:
                                         va += 1 / 2.0
                                         if va > (ma_ - 1) // 2 + 1 / 2.0:
@@ -114,9 +108,11 @@ def S_lm(basis_a, basis_b):
                                     pow_xb = math.floor(2 * tb + mb_ - 2 * (ub + vb))
                                     pow_ya = math.floor(2 * (ua + va))
                                     pow_yb = math.floor(2 * (ub + vb))
+
                                     S_mamb[i][j] += f * C_a[ma_][ta][ua][math.floor(2 * va)] * \
                                                     C_b[mb_][tb][ub][math.floor(2 * vb)] * \
                                                     Sab[pow_xa][pow_xb][pow_ya][pow_yb]
+
                                 if flag:
                                     break
             S_mamb[i][j] *= Nma * Nmb
@@ -127,6 +123,7 @@ def get_ovlp(mol):
     basis = mol.basis
     S = np.array([[None for j in range(mol.basis_num)] for i in range(mol.basis_num)])
     ind_i = 0
+    change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけm=0,1,-1 ( x,y,z)順
     for i in range(len(basis)):
         ind_j = 0
         for j in range(len(basis)):
@@ -134,51 +131,15 @@ def get_ovlp(mol):
             Slm = S_lm(basis[i], basis[j])
             for k in range(2 * la + 1):
                 for l in range(2 * lb + 1):
-                    S[ind_i + (k+1) % (2 * la + 1)][ind_j + (l + 1) % (2 * lb + 1)] = Slm[k][l]
+                    S[ind_i + change[la][k]][ind_j + change[lb][l]] = Slm[k][l]
+                    #S[ind_i + (k+1) % (2 * la + 1)][ind_j + (l + 1) % (2 * lb + 1)] = Slm[k][l]
             ind_j += 2 * lb + 1
         ind_i += 2 * la + 1
 
     return S
 
 
-M = Mole([['H', 0, 0, -0.7], ['Li', 0, 0, 0.7]], 'sto3g')
-
-basis = M.basis
-a = basis[1]
-b = basis[3]
-
-S = get_ovlp(M)
-print(S)
 
 
-from pyscf import gto, scf, ao2mo
-import numpy
-mol = gto.Mole()
-xx = 0.52918
-
-mol.build(
-    atom='H 0 0 %f; Li 0 0 %f' %(-0.7 * xx, 0.7* xx),
-    basis='sto3g')
-S1 = mol.intor('int1e_ovlp')
-
-mol1 = gto.Mole()
-mol1.build(
-    atom='K 0 0 %f; H 0 0 %f' %(0*xx, 1*xx),
-    basis='sto3g',
-)
-print(mol1.atom)
-s1 = mol1.intor('int1e_ovlp')
-
-m = Mole([['K', 0, 0, 0], ['H', 0, 0, 1]], 'sto3g',)
-for i in m.basis:
-    print(i)
-s = get_ovlp(m)
-print(s.shape)
-print(s1.shape)
-ans = 0
 
 
-for i in range(len(s)):
-    for j in range(len(s[0])):
-        ans += abs(s[i][j] - s1[i][j])
-print(ans)
