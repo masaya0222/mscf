@@ -10,7 +10,7 @@ def V_ijklmn(I, J, Ra, Rb, Rc_list, Zc_list, ai, bi):
     Rtuv = np.array(
         [[[0.0 for v in range((I + J) + 1 - t - u)] for u in range((I + J) + 1 - t)] for t in range((I + J) + 1)])
     for Rc, Zc in zip(Rc_list, Zc_list):
-        r = R_tuv(I, J, Rp, Rc, ai, bi)
+        r = R_tuv(I + J, Rp, Rc, p)
         for t in range((I + J) + 1):
             for u in range((I + J) + 1 - t):
                 for v in range((I + J) + 1 - t - u):
@@ -34,20 +34,19 @@ def V_ijklmn(I, J, Ra, Rb, Rc_list, Zc_list, ai, bi):
     return Vijklmn
 
 
-def R_tuv(I, J, Rp, Rc, ai, bi):
-    p = ai + bi
+def R_tuv(IJ, Rp, Rc, p):
     Xpc = Rp[0] - Rc[0]
     Ypc = Rp[1] - Rc[1]
     Zpc = Rp[2] - Rc[2]
     Rpc_2 = Xpc ** 2 + Ypc ** 2 + Zpc ** 2
-    R = [np.array([[[0.0 for v in range((I + J) - N + 1 - t - u)] for u in range((I + J) - N + 1 - t)] for t in
-                   range((I + J) - N + 1)]) for N in range(I + J + 1)]
-    for n in range(I + J + 1):
+    R = [np.array([[[0.0 for v in range(IJ - N + 1 - t - u)] for u in range(IJ - N + 1 - t)] for t in
+                   range(IJ - N + 1)]) for N in range(IJ + 1)]
+    for n in range(IJ + 1):
         R[n][0][0][0] += (-2 * p) ** n * Fn(n, p * Rpc_2)
-    for n in reversed(range(I + J)):
-        for t in range((I + J) - n + 1):
-            for u in range((I + J) - n + 1 - t):
-                for v in range((I + J) - n + 1 - t - u):
+    for n in reversed(range(IJ)):
+        for t in range(IJ - n + 1):
+            for u in range(IJ - n + 1 - t):
+                for v in range(IJ - n + 1 - t - u):
                     if t >= 1:
                         if t >= 2:
                             R[n][t][u][v] += (t - 1) * R[n + 1][t - 2][u][v]
