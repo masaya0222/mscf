@@ -1,5 +1,3 @@
-# TODO: V_ijklmn
-
 import numpy as np
 from scipy import special
 from mscf.mole.mole import Mole
@@ -213,27 +211,6 @@ def get_v1e(mol):
     return V1e
 
 
-from pyscf import gto
-X = 0.52918  # 単位変換: angstrom -> a0
-x1, y1, z1 = 0.4, -0.1, 1
-x2, y2, z2 = -0.3, 1.2, 1.1
 
-mol = gto.Mole()
-mol.build(
-    atom='I %f %f %f; H %f %f %f' % (
-        x1 * X, y1 * X, z1 * X, x2 * X, y2 * X, z2 * X),
-    basis='sto3g',
-    charge=0
-)
-v = mol.intor('int1e_nuc')
-M = Mole([['I', x1, y1, z1],['H', x2, y2, z2]], 'sto3g', )
-v1e = get_v1e(M)
 
-basis_a = M.basis[5]
-basis_b = M.basis[10]
-Rc_list = []
-Zc_list = []
-for nuc in M.nuc:
-    Rc_list.append(nuc[1:])
-    Zc_list.append(nuc[0])
 
