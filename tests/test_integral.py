@@ -1,6 +1,6 @@
 import unittest
 
-from mscf.integral import ovlp_integral
+from mscf.integral import int1e_ovlp ,int1e_nuc
 import numpy as np
 from math import isclose
 import pyscf.gto
@@ -14,10 +14,10 @@ class IntegralTestCase(unittest.TestCase):
                    [0.1543289673, 0.5353281423, 0.4446345422]]
         basis_b = [[0, 0, 0.7], 0, [3.425250914, 0.6239137298, 0.168855404],
                    [0.1543289673, 0.5353281423, 0.4446345422]]
-        S_aa = ovlp_integral.cont_Sij(basis_a, basis_a)
-        S_ab = ovlp_integral.cont_Sij(basis_a, basis_b)
-        S_ba = ovlp_integral.cont_Sij(basis_b, basis_a)
-        S_bb = ovlp_integral.cont_Sij(basis_b, basis_b)
+        S_aa = int1e_ovlp.cont_Sij(basis_a, basis_a)
+        S_ab = int1e_ovlp.cont_Sij(basis_a, basis_b)
+        S_ba = int1e_ovlp.cont_Sij(basis_b, basis_a)
+        S_bb = int1e_ovlp.cont_Sij(basis_b, basis_b)
         rel_tol = 1e-6  # 厳しいかも
         self.assertTrue(isclose(S_aa[0][0][0][0], 1.0, rel_tol=rel_tol))
         self.assertTrue(isclose(S_ab[0][0][0][0], 0.6593182, rel_tol=rel_tol))
@@ -38,10 +38,10 @@ class IntegralTestCase(unittest.TestCase):
                    [0.1543289673, 0.5353281423, 0.4446345422]]
         basis_b = [[0, 0, 0.7], 0, [3.425250914, 0.6239137298, 0.168855404],
                    [0.1543289673, 0.5353281423, 0.4446345422]]
-        S_aa = ovlp_integral.S_lm(basis_a, basis_a)
-        S_ab = ovlp_integral.S_lm(basis_a, basis_b)
-        S_ba = ovlp_integral.S_lm(basis_b, basis_a)
-        S_bb = ovlp_integral.S_lm(basis_b, basis_b)
+        S_aa = int1e_ovlp.S_lm(basis_a, basis_a)
+        S_ab = int1e_ovlp.S_lm(basis_a, basis_b)
+        S_ba = int1e_ovlp.S_lm(basis_b, basis_a)
+        S_bb = int1e_ovlp.S_lm(basis_b, basis_b)
         rel_tol = 1e-5
         self.assertTrue(isclose(S_aa[0][0], S1[0][0], rel_tol=rel_tol))
         self.assertTrue(isclose(S_ab[0][0], S1[0][1], rel_tol=rel_tol))
@@ -62,7 +62,7 @@ class IntegralTestCase(unittest.TestCase):
             for j in range(len(M.basis)):
                 basis_a = basis[i]
                 basis_b = basis[j]
-                Slm = ovlp_integral.S_lm(basis_a, basis_b)  # y,z,x
+                Slm = int1e_ovlp.S_lm(basis_a, basis_b)  # y,z,x
                 if i < 3 and j < 3:  # 両方ともs型のとき
                     self.assertTrue(isclose(Slm[0][0], S1[i][j], abs_tol=abs_tol))
                 if i == 3 and j < 3:
@@ -86,7 +86,7 @@ class IntegralTestCase(unittest.TestCase):
         S1 = mol.intor('int1e_ovlp')
 
         M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['Li', 0, 0, 0.7]], 'sto3g')
-        S = ovlp_integral.get_ovlp(M)
+        S = int1e_ovlp.get_ovlp(M)
         abs_tol = 1e-5
         for i in range(len(S)):
             for j in range(len(S[0])):
@@ -101,7 +101,7 @@ class IntegralTestCase(unittest.TestCase):
         )
         S1 = mol.intor('int1e_ovlp')
         M = mscf.mole.mole.Mole([['K', 0, 0, 0], ['H', 0, 0, 1]], 'sto3g', )
-        S = ovlp_integral.get_ovlp(M)
+        S = int1e_ovlp.get_ovlp(M)
         abs_tol = 1e-5
         for i in range(len(S)):
             for j in range(len(S[0])):
@@ -121,7 +121,7 @@ class IntegralTestCase(unittest.TestCase):
         )
         S1 = mol.intor('int1e_ovlp')
         M = mscf.mole.mole.Mole([['Sc', x1, y1, z1], ['H', x2, y2, z2], ['H', x3, y3, z3]], 'sto3g', )
-        S = ovlp_integral.get_ovlp(M)
+        S = int1e_ovlp.get_ovlp(M)
         self.assertTrue(S1.shape, S.shape)
         abs_tol = 1e-5
         for i in range(len(S)):
@@ -141,12 +141,89 @@ class IntegralTestCase(unittest.TestCase):
         )
         S1 = mol.intor('int1e_ovlp')
         M = mscf.mole.mole.Mole([['I', x1, y1, z1], ['H', x2, y2, z2], ], 'sto3g', )
-        S = ovlp_integral.get_ovlp(M)
+        S = int1e_ovlp.get_ovlp(M)
         self.assertTrue(S1.shape, S.shape)
         abs_tol = 1e-5
         for i in range(len(S)):
             for j in range(len(S[0])):
                 self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
+
+    def test_contV1e(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='H 0 0 %f; H 0 0 %f;' %( -0.7*X, 0.7*X),
+            basis='sto3g'
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['H', 0, 0, 0.7]], 'sto3g')
+        v1 = int1e_nuc.cont_V1e(M.basis[0], M.basis[0], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1, 1])
+        v2 = int1e_nuc.cont_V1e(M.basis[0], M.basis[1], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1, 1])
+        v3 = int1e_nuc.cont_V1e(M.basis[1], M.basis[0], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1, 1])
+        v4 = int1e_nuc.cont_V1e(M.basis[1], M.basis[1], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1, 1])
+        abs_tol = 1e-5
+        self.assertTrue(isclose(v[0][0], v1[0][0][0][0], abs_tol=abs_tol))
+        self.assertTrue(isclose(v[0][1], v2[0][0][0][0], abs_tol=abs_tol))
+        self.assertTrue(isclose(v[1][0], v3[0][0][0][0], abs_tol=abs_tol))
+        self.assertTrue(isclose(v[1][1], v4[0][0][0][0], abs_tol=abs_tol))
+
+    def test_get_v1e1(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='H 0 0 %f; H 0 0 %f;' % (-0.7 * X, 0.7 * X),
+            basis='sto3g'
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['H', 0, 0, 0.7]], 'sto3g')
+        v1e = mscf.integral.int1e_nuc.get_v1e(M)
+        self.assertEqual(v.shape, v1e.shape)
+        abs_tol = 1e-5
+        for i in range(len(v1e)):
+            for j in range(len(v1e)):
+                self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
+
+        def test_get_v1e2(self):
+            X = 0.52918  # 単位変換: angstrom -> a0
+            mol = pyscf.gto.Mole()
+            mol.build(
+                atom='Li 0 0 %f; Li 0 0 %f;' % (-0.7 * X, 0.7 * X),
+                basis='sto3g'
+            )
+            v = mol.intor('int1e_nuc')
+            M = mscf.mole.mole.Mole([['Li', 0, 0, -0.7], ['Li', 0, 0, 0.7]], 'sto3g')
+            v1e = mscf.integral.int1e_nuc.get_v1e(M)
+            self.assertEqual(v.shape, v1e.shape)
+            abs_tol = 1e-5
+            rel_tol = 1e-5
+            for i in range(len(v)):
+                for j in range(len(v[0])):
+                    diff_abs = abs(v[i][j] - v1e[i][j])
+                    diff_rel = diff_abs / (max(1e-10, max(abs(v[i][j]), abs(v1e[i][j]))))
+                    self.assertTrue(diff_abs <= abs_tol or diff_rel <= rel_tol)
+
+    def test_get_v1e2(self):  # for d軌道
+        X = 0.52918  # 単位変換: angstrom -> a0
+        x1, y1, z1 = 0.4, -0.1, 1
+        x2, y2, z2 = -0.3, 1.2, 1.1
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='I %f %f %f; H %f %f %f;' % (
+                x1 * X, y1 * X, z1 * X, x2 * X, y2 * X, z2 * X),
+            basis='sto3g',
+            charge=0
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['I', x1, y1, z1], ['H', x2, y2, z2], ], 'sto3g', )
+        v1e = int1e_nuc.get_v1e(M)
+        self.assertTrue(v.shape, v1e.shape)
+        abs_tol = 1e-5
+        rel_tol = 1e-5
+        for i in range(len(v)):
+            for j in range(len(v[0])):
+                diff_abs = abs(v[i][j] - v1e[i][j])
+                diff_rel = diff_abs / (max(1e-10, max(abs(v[i][j]), abs(v1e[i][j]))))
+                self.assertTrue(diff_abs <= abs_tol or diff_rel <= rel_tol)
 
 
 if __name__ == '__main__':

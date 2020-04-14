@@ -1,4 +1,5 @@
 from mscf.basis.tools import get_basis
+from mscf.mole.element_data import ELEMENTS_PROTON
 
 
 class Mole:
@@ -7,9 +8,10 @@ class Mole:
         self.basis_name = basis
         self.basis = []
         basis = get_basis(basis)
-        for l in atoms:
+        for l in self.atoms:
             self.basis.extend(format_basis(l, basis[l[0]]))
         self.basis_num = count_basis(self.basis)
+        self.nuc = [[ELEMENTS_PROTON[atom[0]]] + atom[1:] for atom in self.atoms]
 
 
 def format_basis(atoms, basis):

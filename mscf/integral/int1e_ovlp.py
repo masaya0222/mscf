@@ -1,26 +1,22 @@
-# TODO make ovlp_integral with Obara-Saika
-# TODO transformation contracted to sphere
 
 from mscf.mole.mole import Mole
 import numpy as np
 import math
 from scipy import special
+from typing import List
 
 
-def S_ij(I, J, Ax, Bx, ai, bi):
+def S_ij(I, J, Ax, Bx, ai, bi) -> List[List[int]]:
     p = ai + bi
     mu = ai * bi / p
-    Px = (ai * Ax + bi * Bx) / p
-    Xpa = Px - Ax
-    # Xpb = Px - Bx
     Xab = Ax - Bx
     S = [[0 for j in range(J + 1)] for i in range(I + J + 1)]
 
     S[0][0] = np.sqrt(np.pi / p) * np.exp(-mu * Xab ** 2)
     for i in range(I + J):
-        S[i + 1][0] = Xpa * S[i][0] + (1 / (2.0 * p)) * (i * S[i - 1][0])
+        S[i + 1][0] = (-bi / p) * Xab * S[i][0] + (1 / (2.0 * p)) * (i * S[i - 1][0])
     for j in range(J):
-        for i in range(I + J ):
+        for i in range(I + J):
             if i + j >= I + J + 1:
                 continue
             S[i][j + 1] = S[i + 1][j] + Xab * S[i][j]
@@ -28,7 +24,7 @@ def S_ij(I, J, Ax, Bx, ai, bi):
     return S
 
 
-def cont_Sij(basis_a, basis_b):
+def cont_Sij(basis_a, basis_b) -> List[List[List[List[float]]]]:
     Ra, I, a, da = basis_a
     Rb, J, b, db = basis_b
     w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4
@@ -38,8 +34,8 @@ def cont_Sij(basis_a, basis_b):
     Smn = [[S_ij(I, J, Ra[2], Rb[2], ai, bi) for bi in b] for ai in a]
 
     # i+k+m = L && j+l+n = L を利用
-    Sab = [[[[None for l in range(J + 1)] for k in range(I + 1)] for j in range(J + 1)] for i in
-           range(I + 1)]  # L*L*L*L
+    Sab = [[[[0 for l in range(J + 1)] for k in range(I + 1)] for j in range(J + 1)] for i in
+           range(I + 1)]  # L*L*L*L Debugのときは0じゃなくてNoneでも可能
     for i in range(I + 1):
         for j in range(J + 1):
             for k in range(I + 1 - i):
@@ -60,16 +56,15 @@ def cont_Sij(basis_a, basis_b):
     return Sab
 
 
-def S_lm(basis_a, basis_b):
+def S_lm(basis_a, basis_b) -> List[List[int]]:
     Sab = cont_Sij(basis_a, basis_b)
     Ra, la, a, da = basis_a
     Rb, lb, b, db = basis_b
-    L = max(la, lb)
-    k = la / 2
-    fact = [math.factorial(i) for i in range(2 * L + 1)]
-    comb = [[special.comb(i, j, exact=True) for j in range(L + 1)] for i in range(L + 1)]
-    S_mamb = [[0 for mb in range(2 * lb + 1)] for ma in
-              range(2 * la + 1)]  # i番目はma = i-laに対応 i=0=>ma=-la, i=La=>ma=0, i=2*La=>ma=la
+    max_l = max(la, lb)
+    fact = [math.factorial(i) for i in range(2 * max_l + 1)]
+    comb = [[special.comb(i, j, exact=True) for j in range(max_l + 1)] for i in range(max_l + 1)]
+    S_mamb = [[0 for mb in range(2 * lb + 1)] for ma in range(2 * la + 1)]
+    # i番目はma = i-laに対応 i=0=>ma=-la, i=La=>ma=0, i=2*La=>ma=la
     C_a = [[[[(-2 * (t % 2) + 1.0) * (1.0 / 4 ** t) * comb[la][t] * comb[la - t][ma_ + t] * comb[t][u] * comb[ma_][v]
               if (la >= t >= u and la - t >= ma_ + t and ma_ >= 2 * v / 2.0) else 0
               for v in range(la + 1)] for u in range(la // 2 + 1)] for t in range(la // 2 + 1)] for ma_ in
@@ -95,22 +90,24 @@ def S_lm(basis_a, basis_b):
                             for va in range(ma_ // 2 + 1):
                                 for vb in range(mb_ // 2 + 1):
                                     f = -2 * ((va + vb) % 2) + 1
+                                    va_ = va
+                                    vb_ = vb
                                     if ma < 0:
-                                        va += 1 / 2.0
-                                        if va > (ma_ - 1) // 2 + 1 / 2.0:
+                                        va_ += 1 / 2.0
+                                        if va_ > (ma_ - 1) // 2 + 1 / 2.0:
                                             flag = True
                                             break
                                     if mb < 0:
-                                        vb += 1 / 2.0
-                                        if vb > (mb_ - 1) // 2 + 1 / 2.0:
+                                        vb_ += 1 / 2.0
+                                        if vb_ > (mb_ - 1) // 2 + 1 / 2.0:
                                             break
-                                    pow_xa = math.floor(2 * ta + ma_ - 2 * (ua + va))
-                                    pow_xb = math.floor(2 * tb + mb_ - 2 * (ub + vb))
-                                    pow_ya = math.floor(2 * (ua + va))
-                                    pow_yb = math.floor(2 * (ub + vb))
+                                    pow_xa = math.floor(2 * ta + ma_ - 2 * (ua + va_))
+                                    pow_xb = math.floor(2 * tb + mb_ - 2 * (ub + vb_))
+                                    pow_ya = math.floor(2 * (ua + va_))
+                                    pow_yb = math.floor(2 * (ub + vb_))
 
-                                    S_mamb[i][j] += f * C_a[ma_][ta][ua][math.floor(2 * va)] * \
-                                                    C_b[mb_][tb][ub][math.floor(2 * vb)] * \
+                                    S_mamb[i][j] += f * C_a[ma_][ta][ua][math.floor(2 * va_)] * \
+                                                    C_b[mb_][tb][ub][math.floor(2 * vb_)] * \
                                                     Sab[pow_xa][pow_xb][pow_ya][pow_yb]
 
                                 if flag:
@@ -119,11 +116,11 @@ def S_lm(basis_a, basis_b):
     return S_mamb
 
 
-def get_ovlp(mol):
+def get_ovlp(mol: Mole) -> List[List[int]]:
     basis = mol.basis
     S = np.array([[None for j in range(mol.basis_num)] for i in range(mol.basis_num)])
     ind_i = 0
-    change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけm=0,1,-1 ( x,y,z)順
+    change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけ m=0,1,-1 ( x,y,z)順
     for i in range(len(basis)):
         ind_j = 0
         for j in range(len(basis)):
@@ -132,14 +129,8 @@ def get_ovlp(mol):
             for k in range(2 * la + 1):
                 for l in range(2 * lb + 1):
                     S[ind_i + change[la][k]][ind_j + change[lb][l]] = Slm[k][l]
-                    #S[ind_i + (k+1) % (2 * la + 1)][ind_j + (l + 1) % (2 * lb + 1)] = Slm[k][l]
             ind_j += 2 * lb + 1
         ind_i += 2 * la + 1
-
     return S
-
-
-
-
 
 
