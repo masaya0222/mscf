@@ -10,24 +10,27 @@ def S_ij(I, J, Ax, Bx, ai, bi) -> List[List[int]]:
     p = ai + bi
     mu = ai * bi / p
     Xab = Ax - Bx
-    S = [[0 for j in range(J + 1)] for i in range(I + J + 1)]
-
+    #S = [[0 for j in range(J + 1)] for i in range(I + J + 1)]
+    S = [[0.0 for j in range(J + 1)] for i in range(I + 1)]
     S[0][0] = np.sqrt(np.pi / p) * np.exp(-mu * Xab ** 2)
-    for i in range(I + J):
+    #for i in range(I + J):
+    for i in range(I):
         S[i + 1][0] = (-bi / p) * Xab * S[i][0] + (1 / (2.0 * p)) * (i * S[i - 1][0])
     for j in range(J):
-        for i in range(I + J):
-            if i + j >= I + J + 1:
-                continue
-            S[i][j + 1] = S[i + 1][j] + Xab * S[i][j]
-    S = S[:I + 1]
+        #for i in range(I + J):
+        for i in range(I + 1):
+            S[i][j+1] = (ai / p) *Xab* S[i][j] + (1/(2*p))*(i*S[i-1][j] + j*S[i][j-1])
+            #if i + j >= I + J + 1:
+            #    continue
+            #S[i][j + 1] = S[i + 1][j] + Xab * S[i][j]
+    #S = S[:I + 1]
     return S
 
 
 def cont_Sij(basis_a, basis_b) -> List[List[List[List[float]]]]:
     Ra, I, a, da = basis_a
     Rb, J, b, db = basis_b
-    w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4
+    w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4(
 
     Sij = [[S_ij(I, J, Ra[0], Rb[0], ai, bi) for bi in b] for ai in a]
     Skl = [[S_ij(I, J, Ra[1], Rb[1], ai, bi) for bi in b] for ai in a]
@@ -50,7 +53,6 @@ def cont_Sij(basis_a, basis_b) -> List[List[List[List[float]]]]:
                             Nb = (2 * b[q] / np.pi) ** (3 / 4.0) * np.sqrt(
                                 ((4 * b[q]) ** J) / (w_fact[J]))  # (w_fact[j] * w_fact[l] * w_fact[n]))
                             ans *= Na * Nb
-
                             Sab[i][j][k][l] += ans
     return Sab
 

@@ -202,6 +202,7 @@ def get_v2e(mol):
         ind_i += 2 * I1 + 1
     return V2e
 
+from pyscf import gto
 
 
 
