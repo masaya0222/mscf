@@ -64,12 +64,12 @@ def S_ij(I, J, Ax, Bx, ai, bi):
         S_c[i] = S[i].ctypes.data_as(ctypes.c_void_p)
 
     lib = load_library("libcovlp")
-    f = getattr(lib, "S_ij")
+    f = getattr(lib, "test")
     print(S.shape)
 
     f(S_c, 3, 2)
     print(S)
-extern "C" void S_ij(double **S, int I, int J) {
+extern "C" void test(double **S, int I, int J) {
   cout << "hello" << endl;
   cout << M_PI << endl;
   cout << *S <<" " << **S << endl;

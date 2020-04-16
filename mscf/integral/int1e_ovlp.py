@@ -19,7 +19,7 @@ def S_ij(I, J, Ax, Bx, ai, bi) -> List[List[int]]:
     for j in range(J):
         #for i in range(I + J):
         for i in range(I + 1):
-            S[i][j+1] = (ai / p) *Xab* S[i][j] + (1/(2*p))*(i*S[i-1][j] + j*S[i][j-1])
+            S[i][j+1] = (ai    / p) *Xab* S[i][j] + (1/(2*p))*(i*S[i-1][j] + j*S[i][j-1])
             #if i + j >= I + J + 1:
             #    continue
             #S[i][j + 1] = S[i + 1][j] + Xab * S[i][j]
@@ -30,7 +30,7 @@ def S_ij(I, J, Ax, Bx, ai, bi) -> List[List[int]]:
 def cont_Sij(basis_a, basis_b) -> List[List[List[List[float]]]]:
     Ra, I, a, da = basis_a
     Rb, J, b, db = basis_b
-    w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4(
+    w_fact = [1, 1, 3, 15, 105]  # (2*i-1)!! 0<=i<=4
 
     Sij = [[S_ij(I, J, Ra[0], Rb[0], ai, bi) for bi in b] for ai in a]
     Skl = [[S_ij(I, J, Ra[1], Rb[1], ai, bi) for bi in b] for ai in a]
@@ -61,6 +61,7 @@ def S_lm(basis_a, basis_b) -> List[List[int]]:
     Sab = cont_Sij(basis_a, basis_b)
     Ra, la, a, da = basis_a
     Rb, lb, b, db = basis_b
+
     max_l = max(la, lb)
     fact = [math.factorial(i) for i in range(2 * max_l + 1)]
     comb = [[special.comb(i, j, exact=True) for j in range(max_l + 1)] for i in range(max_l + 1)]
@@ -110,7 +111,6 @@ def S_lm(basis_a, basis_b) -> List[List[int]]:
                                     S_mamb[i][j] += f * C_a[ma_][ta][ua][math.floor(2 * va_)] * \
                                                     C_b[mb_][tb][ub][math.floor(2 * vb_)] * \
                                                     Sab[pow_xa][pow_xb][pow_ya][pow_yb]
-
                                 if flag:
                                     break
             S_mamb[i][j] *= Nma * Nmb
