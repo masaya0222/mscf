@@ -51,7 +51,7 @@ def c_S_lm(basis_a, basis_b):
     Ra, la, a, da = basis_a
     Rb, lb, b, db = basis_b
     S_mamb = np.zeros((2 * la + 1, 2 * lb + 1))
-    S_mamb_c =  S_mamb.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * ((2 * la + 1) * (2 * lb + 1))))
+    S_mamb_c = S_mamb.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * ((2 * la + 1) * (2 * lb + 1))))
     lib = load_library("libcovlp")
     f = getattr(lib, "S_lm")
     a = np.array(a)
@@ -98,56 +98,3 @@ def c_get_ovlp(mol: Mole):
     f = getattr(lib, "get_ovlp")
     f(c_S, c_R, c_l, c_a, c_da, c_P, c_basis_len, c_basis_num)
     return S
-
-
-def test():
-    S = np.zeros((3, 2))
-    S[0][0] = 1
-    S[0][1] = 2
-    S[1][0] = 3
-    S[1][1] = 4
-    S[2][0] = 5
-    S[2][1] = 6
-    S_c = (ctypes.c_void_p * 3)()
-    for i in range(3):
-        S_c[i] = S[i].ctypes.data_as(ctypes.c_void_p)
-    T = np.zeros((3, 2))
-    T[0][0] = 6
-    T[0][1] = 5
-    T[1][0] = 4
-    T[1][1] = 3
-    T[2][0] = 2
-    T[2][1] = 1
-    T_c = (ctypes.c_void_p * 3)()
-    for i in range(3):
-        T_c[i] = T[i].ctypes.data_as(ctypes.c_void_p)
-
-    lib = load_library("libcovlp")
-    f = getattr(lib, "test")
-    print(S.shape)
-
-    f(S_c, 3, 2,T_c)
-
-import time
-from mscf.integral.int1e_ovlp import S_ij, cont_Sij, S_lm, get_ovlp
-from mscf.mole.mole import Mole
-from pyscf import gto
-#mol = Mole([['I', 0, 0, -0.7], ['I', 0, 0, 0.7]], 'sto3g')
-
-mol = Mole([['H', 0, 0, -0.7], ['H', 0, 0, 0.7]], 'sto3g')
-N = 4
-start1 = time.time()
-
-for i in range(int(10**N)):
-    S1 = get_ovlp(mol)
-time1 = time.time() - start1
-
-np.set_printoptions(precision=16)
-#N+=2
-start2 = time.time()
-for j in range(int(10**N)):
-    S2 = c_get_ovlp(mol)
-time2 = time.time() - start2
-print("time1: ", time1)
-print("time2: ", time2)
-

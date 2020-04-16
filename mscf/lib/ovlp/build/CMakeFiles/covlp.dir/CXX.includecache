@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/masaya/PycharmProjects/mscf/mscf/lib/ovlp/ovlp.cpp
+stdio.h
+-
+iostream
+-
+cmath
+-
+algorithm
+-
+vector
+-
+
