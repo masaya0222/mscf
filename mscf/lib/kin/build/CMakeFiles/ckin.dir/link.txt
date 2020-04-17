@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libckin.so -o /home/masaya/PycharmProjects/mscf/mscf/lib/libckin.so CMakeFiles/ckin.dir/kin.cpp.o 

@@ -44,44 +44,77 @@ extern "C" void S_ij(double *S, int I, int J, double Ax, double Bx, double ai, d
   }
 }
 
-extern "C" void cont_Sij(double *S, int I, int J, int P, int Q, double *Ra, double *Rb, double *a, double *b, double *da, double *db) {
+extern "C" void T_ij(double *Tij, double *Sij, int I, int J, double Ax, double Bx, double ai, double bi){
+  double p = ai + bi;
+  double Xab = Ax - Bx;
+  S_ij(Sij, I, J, Ax, Bx, ai, bi);
+  Tij[0*(J+1)+0] = (ai-2*pow(ai,2)*(pow((-bi*Xab/p),2)+1/(2*p)))*Sij[0*(J+1)+0];
+  for(int i=0;i<I;i++){
+    Tij[(i+1)*(J+1)+0] = -bi/p*Xab*Tij[i*(J+1)+0] + bi/p*2*ai*Sij[(i+1)*(J+1)+0];
+    if(i!=0){
+      Tij[(i+1)*(J+1)+0] += 1/(2*p)*i*Tij[(i-1)*(J+1)+0] - bi/p*i*Sij[(i-1)*(J+1)+0];
+    }
+  }
+  for(int j=0;j<J;j++){
+    for(int i=0;i<I+1;i++){
+      Tij[i*(J+1)+j+1] = ai/p*Xab*Tij[i*(J+1)+j] + ai/p*2*bi*Sij[i*(J+1)+j+1];
+      if(i!=0){
+	Tij[i*(J+1)+j+1] += 1/(2*p)*i*Tij[(i-1)*(J+1)+j];
+      }
+      if(j!=0){
+	Tij[i*(J+1)+j+1] += 1/(2*p)*j*Tij[i*(J+1)+j-1] - ai/p*j*Sij[i*(J+1)+j-1];
+      }
+    }
+  }
+}
+
+extern "C" void cont_Tij(double *T, int I, int J, int P, int Q, double *Ra, double *Rb, double *a, double *b, double *da, double *db) {
   double Sij[P*Q][(I+1)*(J+1)];
   double Skl[P*Q][(I+1)*(J+1)];
   double Smn[P*Q][(I+1)*(J+1)];
+
+  double Tij[P*Q][(I+1)*(J+1)];
+  double Tkl[P*Q][(I+1)*(J+1)];
+  double Tmn[P*Q][(I+1)*(J+1)];
+
   double w_fact[] = {1.0,1.0,3.0,15.0,105.0};
   for(int i=0;i<P;i++){
     for(int j=0;j<Q;j++){
-      S_ij(Sij[i*Q+j], I, J, Ra[0], Rb[0], a[i], b[j]);
-      S_ij(Skl[i*Q+j], I, J, Ra[1], Rb[1], a[i], b[j]);
-      S_ij(Smn[i*Q+j], I, J, Ra[2], Rb[2], a[i], b[j]);
-      }
-      }
+      T_ij(Tij[i*Q+j],Sij[i*Q+j], I, J, Ra[0], Rb[0], a[i], b[j]);
+      T_ij(Tkl[i*Q+j],Skl[i*Q+j], I, J, Ra[1], Rb[1], a[i], b[j]);
+      T_ij(Tmn[i*Q+j],Smn[i*Q+j], I, J, Ra[2], Rb[2], a[i], b[j]);
+    }
+  }
   double ans;
   double Na,Nb;
   for(int i=0;i<I+1;i++){
     for(int j=0;j<J+1;j++){
       for(int k=0;k<I+1-i;k++){
-  	for(int l=0;l<J+1-j;l++){
-  	  int m = I-i-k;
-  	  int n = J-j-l;
-  	  for(int p=0;p<P;p++){
-  	    for(int q=0;q<Q;q++){
-  	      ans = da[p]*db[q]*Sij[p*Q+q][i*(J+1)+j]*Skl[p*Q+q][k*(J+1)+l]*Smn[p*Q+q][m*(J+1)+n];
-  	      Na = pow(2.0*a[p]/M_PI,3.0/4.0)*sqrt(pow(4.0*a[p],I)/w_fact[I]);
-  	      Nb = pow(2.0*b[q]/M_PI,3.0/4.0)*sqrt(pow(4.0*b[q],J)/w_fact[J]);
-  	      ans *= Na * Nb;	      
-  	      S[((i*(J+1)+j)*(I+1)+k)*(J+1)+l] += ans;
-  	    }
-  	  }
-  	}
+	for(int l=0;l<J+1-j;l++){
+	  int m = I-i-k;
+	  int n = J-j-l;
+	  for(int p=0;p<P;p++){
+	    for(int q=0;q<Q;q++){
+	      ans = Tij[p*Q+q][i*(J+1)+j]*Skl[p*Q+q][k*(J+1)+l]*Smn[p*Q+q][m*(J+1)+n];
+	      ans += Sij[p*Q+q][i*(J+1)+j]*Tkl[p*Q+q][k*(J+1)+l]*Smn[p*Q+q][m*(J+1)+n];
+	      ans += Sij[p*Q+q][i*(J+1)+j]*Skl[p*Q+q][k*(J+1)+l]*Tmn[p*Q+q][m*(J+1)+n];
+	      
+	      Na = pow(2.0*a[p]/M_PI,3.0/4.0)*sqrt(pow(4.0*a[p],I)/w_fact[I]);
+	      Nb = pow(2.0*b[q]/M_PI,3.0/4.0)*sqrt(pow(4.0*b[q],J)/w_fact[J]);
+	      ans *= da[p]*db[q]*Na * Nb;
+	      
+	      T[((i*(J+1)+j)*(I+1)+k)*(J+1)+l] += ans;
+	    }
+	  }
+	}
       }
     }
   }  
 }
 
-extern "C" void S_lm(double *S, int la, int lb, int P, int Q, double *Ra, double *Rb, double *a, double *b, double *da, double *db){
-  double Sab[(la+1)*(lb+1)*(la+1)*(lb+1)] = {0.0};
-  cont_Sij(Sab, la, lb, P, Q, Ra, Rb, a, b, da, db);
+extern "C" void T_lm(double *T, int la, int lb, int P, int Q, double *Ra, double *Rb, double *a, double *b, double *da, double *db){
+  double Tab[(la+1)*(lb+1)*(la+1)*(lb+1)] = {0.0};
+  cont_Tij(Tab, la, lb, P, Q, Ra, Rb, a, b, da, db);
   int max_l = max(la, lb);
   int fact[max_l*2+1];
   fact[0] = 1;
@@ -124,7 +157,7 @@ extern "C" void S_lm(double *S, int la, int lb, int P, int Q, double *Ra, double
   int pow_xa, pow_xb, pow_ya, pow_yb;
   for(int i=0;i<2*la+1;i++){
     for(int j=0;j<2*lb+1;j++){
-      S[i*(2*lb+1)+j] = 0.0;
+      T[i*(2*lb+1)+j] = 0.0;
       ma = i-la; mb = j-lb;
       ma_ = abs(ma); mb_ = abs(mb);
       if(ma==0){
@@ -158,20 +191,19 @@ extern "C" void S_lm(double *S, int la, int lb, int P, int Q, double *Ra, double
 		  pow_xb = floor(2*tb+mb_-2*(ub+vb_));
 		  pow_ya = floor(2*(ua+va_));
 		  pow_yb = floor(2*(ub+vb_));
-
-		  S[i*(2*lb+1)+j] += f*C_a[ma_][ta][ua][int(2*va_)]*C_b[mb_][tb][ub][int(2*vb_)]*Sab[((pow_xa*(lb+1)+pow_xb)*(la+1)+pow_ya)*(lb+1)+pow_yb];
+		  T[i*(2*lb+1)+j] += f*C_a[ma_][ta][ua][int(2*va_)]*C_b[mb_][tb][ub][int(2*vb_)]*Tab[((pow_xa*(lb+1)+pow_xb)*(la+1)+pow_ya)*(lb+1)+pow_yb];
 		}
 	      }
 	    }
 	  }
 	}
       }
-      S[i*(2*lb+1)+j] *= Nma*Nmb;
+      T[i*(2*lb+1)+j] *= Nma*Nmb;
     }
   }
 }
 
-extern "C" void get_ovlp(double *S, double **R, int *l,double **a, double **da,int *P, int basis_len, int  basis_num){
+extern "C" void get_kin(double *T, double **R, int *l,double **a, double **da,int *P, int basis_len, int  basis_num){
   int ind_i=0;
   int ind_j=0;
   int la, lb;
@@ -180,45 +212,15 @@ extern "C" void get_ovlp(double *S, double **R, int *l,double **a, double **da,i
     ind_j = 0;
     for(int j=0;j<basis_len;j++){
       la = l[i]; lb = l[j];
-      double Slm[(la+1)*(lb+1)*(la+1)*(lb+1)] = {0.0};
-      S_lm(Slm, la, lb, P[i], P[j], R[i], R[j], a[i], a[j], da[i], da[j]);
+      double Tlm[(la+1)*(lb+1)*(la+1)*(lb+1)] = {0.0};
+      T_lm(Tlm, la, lb, P[i], P[j], R[i], R[j], a[i], a[j], da[i], da[j]);
       for(int k=0;k<2*la+1;k++){
 	for(int l=0;l<2*lb+1;l++){
-	  S[(ind_i+change[la][k])*basis_num+ind_j+change[lb][l]] = Slm[k*(2*lb+1)+l];
+	  T[(ind_i+change[la][k])*basis_num+ind_j+change[lb][l]] = Tlm[k*(2*lb+1)+l];
 	}
       }
       ind_j+=2*lb+1;
     }
     ind_i+=2*la+1;
   }
-}
-
-extern "C" void test(double **S, int I, int J, double **T) {
-  cout << "hello" << endl;
-  cout << M_PI << endl;
-  cout << *S <<" " << **S << endl;
-  cout << *S+1 << ", " << *(*S+1) << endl;
-  cout << *(S+1) << " " << **(S+1) << endl;
-  cout << *(S+1)+1 << " " << *(*(S+1)+1) << endl;
-  cout << *(S+2) << " " << **(S+2) << endl;
-  cout << *(S+2)+1 << " " << *(*(S+2)+1) << endl;
-  cout << endl << endl;
-
-  
-  for(int i=0; i<I; i++){
-    for(int j=0; j<J; j++){
-      S[i][j]+=1;
-    }
-  }
-  cout << endl << endl;
-  cout << *T <<" " << **T << endl;
-  cout << *T+1 << ", " << *(*T+1) << endl;
-  cout << *(T+1) << " " << **(T+1) << endl;
-  cout << *(T+1)+1 << " " << *(*(T+1)+1) << endl;
-  cout << *(T+2) << " " << **(T+2) << endl;
-  cout << *(T+2)+1 << " " << *(*(T+2)+1) << endl;
-  cout << endl << endl;
-
-
-  cout << "finish" << endl;
 }

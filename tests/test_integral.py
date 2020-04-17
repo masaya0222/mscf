@@ -91,7 +91,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-12 or abs(S1[i][j]) <= 1e-12:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -110,7 +110,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-12 or abs(S1[i][j]) <= 1e-12:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -135,7 +135,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-12 or abs(S1[i][j]) <= 1e-12:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -159,7 +159,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-12 or abs(S1[i][j]) <= 1e-12:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -177,7 +177,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(T)):
             for j in range(len(T[0])):
-                if T[i][j] == 0.0 or T1[i][j] == 0.0:
+                if abs(T[i][j]) < 1e-12 or abs(T1[i][j]) < 1e-12:
                     self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
@@ -196,7 +196,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(T)):
             for j in range(len(T[0])):
-                if T[i][j] == 0.0 or T1[i][j] == 0.0:
+                if abs(T[i][j]) < 1e-12 or abs(T1[i][j]) < 1e-12:
                     self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
@@ -284,7 +284,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(v)):
             for j in range(len(v[0])):
-                if v[i][j] == 0.0 or v1e[i][j] == 0.0:
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))
@@ -304,7 +304,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(v)):
             for j in range(len(v[0])):
-                if v[i][j] == 0.0 or v1e[i][j] == 0.0:
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))
@@ -328,7 +328,7 @@ class IntegralTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(v)):
             for j in range(len(v[0])):
-                if v[i][j] == 0.0 or v1e[i][j] == 0.0:
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))

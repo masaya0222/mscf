@@ -4,29 +4,31 @@ import ctypes
 from mscf.mole.mole import Mole
 
 
-def c_S_ij(I, J, Ax, Bx, ai, bi):
-    S = np.zeros((I + 1, J + 1)).astype(np.double)
-    S_c = S.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p*((I+1)*(J+1))))
-    lib = load_library("libcovlp")
-    f = getattr(lib, "S_ij")
+def c_T_ij(I, J, Ax, Bx, ai, bi):
+    Sij = np.zeros((I + 1, J + 1)).astype(np.double)
+    Sij_c = Sij.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p*((I + 1)*(J + 1))))
+    Tij = np.zeros((I + 1, J + 1)).astype(np.double)
+    Tij_c = Tij.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * ((I + 1) * (J + 1))))
+    lib = load_library("libckin")
+    f = getattr(lib, "T_ij")
     I_c = ctypes.c_int(I)
     J_c = ctypes.c_int(J)
     Ax_c = ctypes.c_double(Ax)
     Bx_c = ctypes.c_double(Bx)
     ai_c = ctypes.c_double(ai)
     bi_c = ctypes.c_double(bi)
-    f(S_c, I_c, J_c, Ax_c, Bx_c, ai_c, bi_c)
-    return S
+    f(Tij_c, Sij_c, I_c, J_c, Ax_c, Bx_c, ai_c, bi_c)
+    return Tij
 
 
-def c_cont_Sij(basis_a, basis_b):
+def c_cont_Tij(basis_a, basis_b):
     Ra, I, a, da = basis_a
     Rb, J, b, db = basis_b
-    Sab = np.zeros((I+1, J+1, I+1, J+1))
-    Sab_c = (ctypes.c_void_p*((I+1)*(J+1)*(I+1)*(J+1)))()
-    Sab_c = Sab.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p*((I+1)*(J+1)*(I+1)*(J+1))))
-    lib = load_library("libcovlp")
-    f = getattr(lib, "cont_Sij")
+    Tab = np.zeros((I+1, J+1, I+1, J+1))
+    Tab_c = (ctypes.c_void_p*((I+1)*(J+1)*(I+1)*(J+1)))()
+    Tab_c = Tab.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p*((I+1)*(J+1)*(I+1)*(J+1))))
+    lib = load_library("libckin")
+    f = getattr(lib, "cont_Tij")
     a = np.array(a).astype(np.double)
     b = np.array(b).astype(np.double)
     a_c = a.ctypes.data_as(ctypes.c_void_p)
@@ -42,17 +44,17 @@ def c_cont_Sij(basis_a, basis_b):
     da_c = da.ctypes.data_as(ctypes.c_void_p)
     db_c = db.ctypes.data_as(ctypes.c_void_p)
 
-    f(Sab_c, ctypes.c_int(I), ctypes.c_int(J), P, Q, Ra_c, Rb_c, a_c, b_c, da_c, db_c)
-    return Sab
+    f(Tab_c, ctypes.c_int(I), ctypes.c_int(J), P, Q, Ra_c, Rb_c, a_c, b_c, da_c, db_c)
+    return Tab
 
 
-def c_S_lm(basis_a, basis_b):
+def c_T_lm(basis_a, basis_b):
     Ra, la, a, da = basis_a
     Rb, lb, b, db = basis_b
-    S_mamb = np.zeros((2 * la + 1, 2 * lb + 1))
-    S_mamb_c = S_mamb.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * ((2 * la + 1) * (2 * lb + 1))))
-    lib = load_library("libcovlp")
-    f = getattr(lib, "S_lm")
+    T_mamb = np.zeros((2 * la + 1, 2 * lb + 1))
+    T_mamb_c = T_mamb.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * ((2 * la + 1) * (2 * lb + 1))))
+    lib = load_library("libckin")
+    f = getattr(lib, "T_lm")
     a = np.array(a).astype(np.double)
     b = np.array(b).astype(np.double)
     a_c = a.ctypes.data_as(ctypes.c_void_p)
@@ -67,13 +69,13 @@ def c_S_lm(basis_a, basis_b):
     db = np.array(db).astype(np.double)
     da_c = da.ctypes.data_as(ctypes.c_void_p)
     db_c = db.ctypes.data_as(ctypes.c_void_p)
-    f(S_mamb_c, ctypes.c_int(la), ctypes.c_int(lb), P, Q, Ra_c, Rb_c, a_c, b_c, da_c, db_c)
-    return S_mamb
+    f(T_mamb_c, ctypes.c_int(la), ctypes.c_int(lb), P, Q, Ra_c, Rb_c, a_c, b_c, da_c, db_c)
+    return T_mamb
 
 
-def c_get_ovlp(mol: Mole):
-    S = np.zeros((mol.basis_num, mol.basis_num))
-    c_S = S.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * (mol.basis_num * mol.basis_num)))
+def c_get_kin(mol: Mole):
+    T = np.zeros((mol.basis_num, mol.basis_num))
+    c_T = T.ctypes.data_as(ctypes.POINTER(ctypes.c_void_p * (mol.basis_num * mol.basis_num)))
     basis = mol.basis
     basis_len = len(basis)
     c_R = (ctypes.c_void_p*basis_len)()
@@ -93,7 +95,7 @@ def c_get_ovlp(mol: Mole):
         c_da[i] = da_[i].ctypes.data_as(ctypes.c_void_p)
     c_basis_len = ctypes.c_int(basis_len)
     c_basis_num = ctypes.c_int(mol.basis_num)
-    lib = load_library("libcovlp")
-    f = getattr(lib, "get_ovlp")
-    f(c_S, c_R, c_l, c_a, c_da, c_P, c_basis_len, c_basis_num)
-    return S
+    lib = load_library("libckin")
+    f = getattr(lib, "get_kin")
+    f(c_T, c_R, c_l, c_a, c_da, c_P, c_basis_len, c_basis_num)
+    return T

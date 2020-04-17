@@ -1,0 +1,3 @@
+/home/masaya/PycharmProjects/mscf/mscf/lib/kin/build/CMakeFiles/rebuild_cache.dir
+/home/masaya/PycharmProjects/mscf/mscf/lib/kin/build/CMakeFiles/ckin.dir
+/home/masaya/PycharmProjects/mscf/mscf/lib/kin/build/CMakeFiles/edit_cache.dir

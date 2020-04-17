@@ -1,6 +1,6 @@
 import unittest
 
-from mscf.integral import int1e_ovlp_c
+from mscf.integral import int1e_ovlp_c, int1e_kin_c
 import numpy as np
 from math import isclose
 import pyscf.gto
@@ -90,7 +90,7 @@ class MyTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-12 or abs(S1[i][j]) == 1e-12:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -109,7 +109,7 @@ class MyTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <= 1e-10 or abs(S1[i][j]) <= 1e-10:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -134,7 +134,7 @@ class MyTestCase(unittest.TestCase):
         abs_tol = 1e-15
         for i in range(len(S)):
             for j in range(len(S[0])):
-                if S[i][j] == 0.0 or S1[i][j] == 0.0:
+                if abs(S[i][j]) <=1e-12 or abs(S1[i][j]) <= 1e-10:
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
@@ -162,6 +162,92 @@ class MyTestCase(unittest.TestCase):
                     self.assertTrue(isclose(S[i][j], S1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(S[i][j], S1[i][j], rel_tol=rel_tol))
+
+    def test_get_kin1(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(atom='H 0 0 %f; Li 0 0 %f' % (-0.7 * X, 0.7 * X),
+                  basis="sto3g")
+        T1 = mol.intor('int1e_kin')
+
+        M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['Li', 0, 0, 0.7]], 'sto3g')
+        T = int1e_kin_c.c_get_kin(M)
+        rel_tol = 1e-4
+        abs_tol = 1e-15
+        for i in range(len(T)):
+            for j in range(len(T[0])):
+                if abs(T[i][j]) <=1e-12 or abs(T1[i][j]) <= 1e-12:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
+
+    def test_get_kin2(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='K 0 0 %f; H 0 0 %f' % (0 * X, 1 * X),
+            basis='sto3g',
+        )
+        T1 = mol.intor('int1e_kin')
+        M = mscf.mole.mole.Mole([['K', 0, 0, 0], ['H', 0, 0, 1]], 'sto3g', )
+        T = int1e_kin_c.c_get_kin(M)
+        rel_tol = 1e-4
+        abs_tol = 1e-15
+        for i in range(len(T)):
+            for j in range(len(T[0])):
+                if abs(T[i][j]) <= 1e-12 or abs(T1[i][j]) <=1e-12:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
+
+    def test_get_kin3(self):  # for d軌道
+        X = 0.52918  # 単位変換: angstrom -> a0
+        x1, y1, z1 = 0.4, -0.1, 1
+        x2, y2, z2 = -0.3, 1.2, 1.1
+        x3, y3, z3 = -0.5, 0.6, -0.1
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='Sc %f %f %f; H %f %f %f; H %f %f %f' % (
+            x1 * X, y1 * X, z1 * X, x2 * X, y2 * X, z2 * X, x3 * X, y3 * X, z3 * X),
+            basis='sto3g',
+            charge=+1
+        )
+        T1 = mol.intor('int1e_kin')
+        M = mscf.mole.mole.Mole([['Sc', x1, y1, z1], ['H', x2, y2, z2], ['H', x3, y3, z3]], 'sto3g', )
+        T = int1e_kin_c.c_get_kin(M)
+        self.assertTrue(T1.shape, T.shape)
+        rel_tol = 1e-4
+        abs_tol = 1e-10
+        for i in range(len(T)):
+            for j in range(len(T[0])):
+                if abs(T[i][j]) <= 1e-12 or abs(T1[i][j]) == 1e-12:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
+
+    def test_get_kin4(self):  # for d軌道
+        X = 0.52918  # 単位変換: angstrom -> a0
+        x1, y1, z1 = 0.4, -0.1, 1
+        x2, y2, z2 = -0.3, 1.2, 1.1
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='I %f %f %f; H %f %f %f;' % (
+                x1 * X, y1 * X, z1 * X, x2 * X, y2 * X, z2 * X),
+            basis='sto3g',
+            charge=0
+        )
+        T1 = mol.intor('int1e_kin')
+        M = mscf.mole.mole.Mole([['I', x1, y1, z1], ['H', x2, y2, z2], ], 'sto3g', )
+        T = int1e_kin_c.c_get_kin(M)
+        self.assertTrue(T1.shape, T.shape)
+        rel_tol = 1e-4
+        abs_tol = 1e-10
+        for i in range(len(T)):
+            for j in range(len(T[0])):
+                if abs(T[i][j]) <= 1e-12 or abs(T1[i][j]) == 1e-12:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
 
 
 if __name__ == '__main__':
