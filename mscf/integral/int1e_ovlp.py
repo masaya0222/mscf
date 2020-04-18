@@ -119,17 +119,22 @@ def S_lm(basis_a, basis_b) -> List[List[int]]:
 
 def get_ovlp(mol: Mole) -> List[List[int]]:
     basis = mol.basis
-    S = np.array([[None for j in range(mol.basis_num)] for i in range(mol.basis_num)])
+    S = np.zeros((mol.basis_num, mol.basis_num))
+    basis_len = len(basis)
+    check = np.zeros((basis_len, basis_len))
     ind_i = 0
     change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけ m=0,1,-1 ( x,y,z)順
     for i in range(len(basis)):
         ind_j = 0
         for j in range(len(basis)):
             la, lb = basis[i][1], basis[j][1]
-            Slm = S_lm(basis[i], basis[j])
-            for k in range(2 * la + 1):
-                for l in range(2 * lb + 1):
-                    S[ind_i + change[la][k]][ind_j + change[lb][l]] = Slm[k][l]
+            if not(check[i][j]):
+                check[i][j] = check[j][i] = 1
+                Slm = S_lm(basis[i], basis[j])
+                for k in range(2 * la + 1):
+                    for l in range(2 * lb + 1):
+                        S[ind_i + change[la][k]][ind_j + change[lb][l]] = Slm[k][l]
+                        S[ind_j + change[lb][l]][ind_i + change[la][k]] = Slm[k][l]
             ind_j += 2 * lb + 1
         ind_i += 2 * la + 1
     return S

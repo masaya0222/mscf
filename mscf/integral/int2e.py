@@ -179,30 +179,42 @@ def V2e_lm(basis_a, basis_b, basis_c, basis_d):
 
 def get_v2e(mol):
     basis = mol.basis
-    V2e = np.array([[[[0.0 for l in range(mol.basis_num)] for k in range(mol.basis_num)] for j in range(mol.basis_num)] for i in range(mol.basis_num)])
+    V2e = np.zeros((mol.basis_num, mol.basis_num, mol.basis_num, mol.basis_num))
+    basis_len = len(basis)
+    check = np.zeros((basis_len, basis_len, basis_len, basis_len))
     change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけ m=0,1,-1 ( x,y,z)順
+
     ind_i = 0
-    for i in range(len(basis)):
+    for i in range(basis_len):
         ind_j = 0
-        for j in range(len(basis)):
+        for j in range(basis_len):
             ind_k = 0
-            for k in range(len(basis)):
+            for k in range(basis_len):
                 ind_l = 0
-                for l in range(len(basis)):
+                for l in range(basis_len):
                     I1, J1, I2, J2 = basis[i][1], basis[j][1], basis[k][1], basis[l][1]
-                    V2elm = V2e_lm(basis[i], basis[j], basis[k], basis[l])
-                    for ma in range(2 * I1 + 1):
-                        for mb in range(2 * J1 + 1):
-                            for mc in range(2 * I2 + 1):
-                                for md in range(2 * J2 + 1):
-                                    V2e[ind_i + change[I1][ma]][ind_j + change[J1][mb]][ind_k + change[I2][mc]][ind_l + change[J2][md]] += V2elm[ma][mb][mc][md]
+                    if not(check[i][j][k][l]):
+                        check[i][j][k][l] = check[i][j][l][k] = check[j][i][k][l] = check[j][i][l][k] = 1
+                        check[k][l][i][j] = check[k][l][j][i] = check[l][k][i][j] = check[l][k][j][i] = 1
+                        V2elm = V2e_lm(basis[i], basis[j], basis[k], basis[l])
+                        for ma in range(2 * I1 + 1):
+                            for mb in range(2 * J1 + 1):
+                                for mc in range(2 * I2 + 1):
+                                    for md in range(2 * J2 + 1):
+                                        ans = V2elm[ma][mb][mc][md]
+                                        V2e[ind_i + change[I1][ma]][ind_j + change[J1][mb]][ind_k + change[I2][mc]][ind_l + change[J2][md]] = ans  # (ab|cd)
+                                        # 以下8-symmetry(ab|cd)=(ab|dc)=(ba|cd)=(ba|dc) = (cd|ab)=(cd|ba)=(dc|ab)=(dc|ba)
+                                        V2e[ind_i + change[I1][ma]][ind_j + change[J1][mb]][ind_l + change[J2][md]][ind_k + change[I2][mc]] = ans  # (ab|dc)
+                                        V2e[ind_j + change[J1][mb]][ind_i + change[I1][ma]][ind_k + change[I2][mc]][ind_l + change[J2][md]] = ans  # (ba|cd)
+                                        V2e[ind_j + change[J1][mb]][ind_i + change[I1][ma]][ind_l + change[J2][md]][ind_k + change[I2][mc]] = ans  # (ba|dc)
+
+                                        V2e[ind_k + change[I2][mc]][ind_l + change[J2][md]][ind_i + change[I1][ma]][ind_j + change[J1][mb]] = ans  # (cd|ab)
+                                        V2e[ind_k + change[I2][mc]][ind_l + change[J2][md]][ind_j + change[J1][mb]][ind_i + change[I1][ma]] = ans  # (cd|ba)
+                                        V2e[ind_l + change[J2][md]][ind_k + change[I2][mc]][ind_i + change[I1][ma]][ind_j + change[J1][mb]] = ans  # (dc|ab)
+                                        V2e[ind_l + change[J2][md]][ind_k + change[I2][mc]][ind_j + change[J1][mb]][ind_i + change[I1][ma]] = ans  # (dc|ba)
                     ind_l += 2 * J2 + 1
                 ind_k += 2 * I2 + 1
             ind_j += 2 * J1 + 1
         ind_i += 2 * I1 + 1
+
     return V2e
-
-from pyscf import gto
-
-
-

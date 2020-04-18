@@ -196,20 +196,31 @@ def get_v1e(mol):
     for nuc in mol.nuc:
         Zc_list.append(nuc[0])
         Rc_list.append(nuc[1:])
-    V1e = np.array([[0.0 for j in range(mol.basis_num)] for i in range(mol.basis_num)])
+    V1e = np.zeros((mol.basis_num, mol.basis_num))
+    basis_len = len(basis)
+    check = np.zeros((basis_len, basis_len))
     ind_i = 0
     change = [[0], [1, 2, 0], [0, 1, 2, 3, 4]]  # p軌道だけ m=0,1,-1 ( x,y,z)順
-    for i in range(len(basis)):
+    for i in range(basis_len):
         ind_j = 0
-        for j in range(len(basis)):
+        for j in range(basis_len):
             la, lb = basis[i][1], basis[j][1]
-            V1elm = V1e_lm(basis[i], basis[j], Rc_list, Zc_list)
-            for k in range(2 * la + 1):
-                for l in range(2 * lb + 1):
-                    V1e[ind_i + change[la][k]][ind_j + change[lb][l]] += V1elm[k][l]
+            if not(check[i][j]):
+                check[i][j] = check[j][i] = 1
+                V1elm = V1e_lm(basis[i], basis[j], Rc_list, Zc_list)
+                for k in range(2 * la + 1):
+                    for l in range(2 * lb + 1):
+                        ans = V1elm[k][l]
+                        V1e[ind_i + change[la][k]][ind_j + change[lb][l]] = ans # = V1elm[k][l]
+                        V1e[ind_j + change[lb][l]][ind_i + change[la][k]] = ans # V1elm[k][l]
             ind_j += 2 * lb + 1
         ind_i += 2 * la + 1
     return V1e
+
+
+
+
+
 
 
 
