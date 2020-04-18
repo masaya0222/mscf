@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/masaya/PycharmProjects/mscf/mscf/lib/nuc/nuc.cpp
+stdio.h
+-
+iostream
+-
+cmath
+-
+algorithm
+-
+vector
+-
+boost/math/special_functions/gamma.hpp
+-
+

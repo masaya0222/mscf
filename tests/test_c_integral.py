@@ -1,6 +1,6 @@
 import unittest
 
-from mscf.integral import int1e_ovlp_c, int1e_kin_c
+from mscf.integral import int1e_ovlp_c, int1e_kin_c, int1e_nuc_c
 import numpy as np
 from math import isclose
 import pyscf.gto
@@ -248,6 +248,89 @@ class MyTestCase(unittest.TestCase):
                     self.assertTrue(isclose(T[i][j], T1[i][j], abs_tol=abs_tol))
                 else:
                     self.assertTrue(isclose(T[i][j], T1[i][j], rel_tol=rel_tol))
+
+    def test_contV1e(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='H 0 0 %f; H 0 0 %f;' %(-0.7*X, 0.7*X),
+            basis='sto3g'
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['H', 0, 0, 0.7]], 'sto3g')
+        v1 = int1e_nuc_c.c_cont_V1e(M.basis[0], M.basis[0], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1])
+        v2 = int1e_nuc_c.c_cont_V1e(M.basis[0], M.basis[1], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1])
+        v3 = int1e_nuc_c.c_cont_V1e(M.basis[1], M.basis[0], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1])
+        v4 = int1e_nuc_c.c_cont_V1e(M.basis[1], M.basis[1], [[0, 0, -0.7], [0, 0, 0.7]], [1, 1])
+        rel_tol = 1e-5
+        self.assertTrue(isclose(v[0][0], v1[0][0][0][0], rel_tol=rel_tol))
+        self.assertTrue(isclose(v[0][1], v2[0][0][0][0], rel_tol=rel_tol))
+        self.assertTrue(isclose(v[1][0], v3[0][0][0][0], rel_tol=rel_tol))
+        self.assertTrue(isclose(v[1][1], v4[0][0][0][0], rel_tol=rel_tol))
+
+    def test_get_v1e1(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='H 0 0 %f; H 0 0 %f;' % (-0.7 * X, 0.7 * X),
+            basis='sto3g'
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['H', 0, 0, -0.7], ['H', 0, 0, 0.7]], 'sto3g')
+        v1e = mscf.integral.int1e_nuc_c.c_get_v1e(M)
+        self.assertEqual(v.shape, v1e.shape)
+        rel_tol = 1e-5
+        abs_tol = 1e-15
+        for i in range(len(v)):
+            for j in range(len(v[0])):
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))
+
+    def test_get_v1e2(self):
+        X = 0.52918  # 単位変換: angstrom -> a0
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='Li 0 0 %f; Li 0 0 %f;' % (-0.7 * X, 0.7 * X),
+            basis='sto3g'
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['Li', 0, 0, -0.7], ['Li', 0, 0, 0.7]], 'sto3g')
+        v1e = mscf.integral.int1e_nuc_c.c_get_v1e(M)
+        self.assertEqual(v.shape, v1e.shape)
+        rel_tol = 1e-4
+        abs_tol = 1e-15
+        for i in range(len(v)):
+            for j in range(len(v[0])):
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))
+
+    def test_get_v1e3(self):  # for d軌道
+        X = 0.52918  # 単位変換: angstrom -> a0
+        x1, y1, z1 = 0.4, -0.1, 1
+        x2, y2, z2 = -0.3, 1.2, 1.1
+        mol = pyscf.gto.Mole()
+        mol.build(
+            atom='I %f %f %f; H %f %f %f;' % (
+                x1 * X, y1 * X, z1 * X, x2 * X, y2 * X, z2 * X),
+            basis='sto3g',
+            charge=0
+        )
+        v = mol.intor('int1e_nuc')
+        M = mscf.mole.mole.Mole([['I', x1, y1, z1], ['H', x2, y2, z2], ], 'sto3g', )
+        v1e = int1e_nuc_c.c_get_v1e(M)
+        self.assertTrue(v.shape, v1e.shape)
+        rel_tol = 1e-4
+        abs_tol = 1e-15
+        for i in range(len(v)):
+            for j in range(len(v[0])):
+                if abs(v[i][j]) < 1e-12 or abs(v1e[i][j]) < 1e-12:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], abs_tol=abs_tol))
+                else:
+                    self.assertTrue(isclose(v[i][j], v1e[i][j], rel_tol=rel_tol))
 
 
 if __name__ == '__main__':

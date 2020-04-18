@@ -54,16 +54,17 @@ extern "C" void cont_Sij(double *S, int I, int J, int P, int Q, double *Ra, doub
       S_ij(Sij[i*Q+j], I, J, Ra[0], Rb[0], a[i], b[j]);
       S_ij(Skl[i*Q+j], I, J, Ra[1], Rb[1], a[i], b[j]);
       S_ij(Smn[i*Q+j], I, J, Ra[2], Rb[2], a[i], b[j]);
-      }
-      }
+    }
+  }
   double ans;
   double Na,Nb;
+  int m,n;
   for(int i=0;i<I+1;i++){
     for(int j=0;j<J+1;j++){
       for(int k=0;k<I+1-i;k++){
   	for(int l=0;l<J+1-j;l++){
-  	  int m = I-i-k;
-  	  int n = J-j-l;
+  	  m = I-i-k;
+  	  n = J-j-l;
   	  for(int p=0;p<P;p++){
   	    for(int q=0;q<Q;q++){
   	      ans = da[p]*db[q]*Sij[p*Q+q][i*(J+1)+j]*Skl[p*Q+q][k*(J+1)+l]*Smn[p*Q+q][m*(J+1)+n];
@@ -192,33 +193,20 @@ extern "C" void get_ovlp(double *S, double **R, int *l,double **a, double **da,i
     ind_i+=2*la+1;
   }
 }
-
-extern "C" void test(double **S, int I, int J, double **T) {
-  cout << "hello" << endl;
-  cout << M_PI << endl;
-  cout << *S <<" " << **S << endl;
-  cout << *S+1 << ", " << *(*S+1) << endl;
-  cout << *(S+1) << " " << **(S+1) << endl;
-  cout << *(S+1)+1 << " " << *(*(S+1)+1) << endl;
-  cout << *(S+2) << " " << **(S+2) << endl;
-  cout << *(S+2)+1 << " " << *(*(S+2)+1) << endl;
-  cout << endl << endl;
-
-  
-  for(int i=0; i<I; i++){
-    for(int j=0; j<J; j++){
-      S[i][j]+=1;
+/*
+extern "C" void test(double*  S, int I, int J) {
+  vector<vector<double>>& v(I,vector<double>(J));
+  for(int i=0;i<I;i++){
+    for(int j=0;j<J;j++){
+      cout << i << " " << j << endl;
+      cout << i*I+j << endl;
+      cout <<"S " << S[i*(J+1)+j] << endl;
+      &v[i][j] = &S[i*(I+1)+j];
+      cout <<"v " <<  v[i][j] << endl;
     }
   }
-  cout << endl << endl;
-  cout << *T <<" " << **T << endl;
-  cout << *T+1 << ", " << *(*T+1) << endl;
-  cout << *(T+1) << " " << **(T+1) << endl;
-  cout << *(T+1)+1 << " " << *(*(T+1)+1) << endl;
-  cout << *(T+2) << " " << **(T+2) << endl;
-  cout << *(T+2)+1 << " " << *(*(T+2)+1) << endl;
-  cout << endl << endl;
-
-
-  cout << "finish" << endl;
+  v[0][0] +=1;
+  cout << S[0] << endl;
 }
+
+*/

@@ -1,0 +1,3 @@
+/home/masaya/PycharmProjects/mscf/mscf/lib/nuc/build/CMakeFiles/rebuild_cache.dir
+/home/masaya/PycharmProjects/mscf/mscf/lib/nuc/build/CMakeFiles/cnuc.dir
+/home/masaya/PycharmProjects/mscf/mscf/lib/nuc/build/CMakeFiles/edit_cache.dir

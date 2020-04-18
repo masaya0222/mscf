@@ -15,9 +15,11 @@ def V_ijklmn(I, J, Ra, Rb, Rc_list, Zc_list, ai, bi):
             for u in range((I + J) + 1 - t):
                 for v in range((I + J) + 1 - t - u):
                     Rtuv[t][u][v] += Zc * r[t][u][v]
+
     Eijt = E_ij_t(I, J, Ra[0], Rb[0], ai, bi)
     Eklu = E_ij_t(I, J, Ra[1], Rb[1], ai, bi)
     Emnv = E_ij_t(I, J, Ra[2], Rb[2], ai, bi)
+
     Vijklmn = [[[[0 for l in range(J + 1 - j)] for k in range(I + 1 - i)] for j in range(J + 1)] for i in range(I + 1)]
     for i in range(I + 1):
         for j in range(J + 1):
