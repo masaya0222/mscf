@@ -208,15 +208,28 @@ extern "C" void get_kin(double *T, double **R, int *l,double **a, double **da,in
   int ind_j=0;
   int la, lb;
   int change[3][5] ={{0},{1,2,0},{0,1,2,3,4}};
+  bool check[basis_len][basis_len];
+  
+  for(int i=0;i<basis_len;i++){
+    for(int j=0;j<basis_len;j++){
+      check[i][j] = false;
+    }
+  }
+  
   for(int i=0; i<basis_len;i++){
     ind_j = 0;
     for(int j=0;j<basis_len;j++){
       la = l[i]; lb = l[j];
-      double Tlm[(la+1)*(lb+1)*(la+1)*(lb+1)] = {0.0};
-      T_lm(Tlm, la, lb, P[i], P[j], R[i], R[j], a[i], a[j], da[i], da[j]);
-      for(int k=0;k<2*la+1;k++){
-	for(int l=0;l<2*lb+1;l++){
-	  T[(ind_i+change[la][k])*basis_num+ind_j+change[lb][l]] = Tlm[k*(2*lb+1)+l];
+      if(!(check[i][j])){
+	check[i][j] = true;
+	check[j][i] = true;
+	double Tlm[(2*la+1)*(2*lb+1)] = {0.0};
+	T_lm(Tlm, la, lb, P[i], P[j], R[i], R[j], a[i], a[j], da[i], da[j]);
+	for(int k=0;k<2*la+1;k++){
+	  for(int l=0;l<2*lb+1;l++){
+	    T[(ind_i+change[la][k])*basis_num+ind_j+change[lb][l]] = Tlm[k*(2*lb+1)+l];
+	    T[(ind_j+change[lb][l])*basis_num+ind_i+change[la][k]] = Tlm[k*(2*lb+1)+l];
+	  }
 	}
       }
       ind_j+=2*lb+1;

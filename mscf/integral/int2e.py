@@ -70,7 +70,7 @@ def cont_V2(basis_a, basis_b, basis_c, basis_d):
                             for k2 in range(I2 + 1 - i2):
                                 for l2 in range(J2 + 1 - j2):
                                     m2 = I2 - i2 - k2
-                                    l2 = J2 - j2 - l2
+                                    n2 = J2 - j2 - l2
                                     ans = 0.0
                                     for p1 in range(len(a)):
                                         for q1 in range(len(b)):
