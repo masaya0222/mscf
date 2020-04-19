@@ -67,8 +67,15 @@ def R_tuv(IJ, Rp, Rc, p):
 
 
 def Fn(n, x):
-    if abs(x) <= 1e-10:
-        return 1 / (2 * n + 1)
+    if x <= 0.10:
+        result = 1/(2*n+1)
+        result_k = 1
+        result_x = 1
+        for k in range(1, 7):
+            result_x *= (-x)
+            result_k *= k
+            result += result_x/(result_k*(2*n+2*k+1))
+        return result
     value_a = special.gamma(n + 1 / 2)
     value_b = special.gammainc(n + 1 / 2, x)
     value_c = 2 * x ** (n + 1 / 2)
@@ -216,13 +223,3 @@ def get_v1e(mol):
             ind_j += 2 * lb + 1
         ind_i += 2 * la + 1
     return V1e
-
-
-
-
-
-
-
-
-
-

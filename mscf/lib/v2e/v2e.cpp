@@ -50,7 +50,17 @@ extern "C" void E_ij_t(double *E, int I,int J, double Ax, double Bx, double ai, 
 }		       
 
 extern "C" double Fn(int n, double x){
-  if(abs(x) <= 1.0e-10) return 1.0/(2.0*n+1.0);
+  if(x <= 1.0e-1){
+    double result = 1/(2*n+1.0);
+    double result_k = 1.0;
+    double result_x = 1.0;
+    for(int k=1;k<7;k++){
+      result_x *= (-x);
+      result_k *= k;
+      result += result_x/(result_k*(2*n+2*k+1));
+    }
+    return result;
+  }
   double value_a = boost::math::tgamma(n+0.5);
   double value_b = boost::math::gamma_p(n+0.5, x);
   double value_c = 2*pow(x,n+0.5);

@@ -1,6 +1,6 @@
 import unittest
 import pyscf
-import mscf
+import mscf.mole.mole
 from mscf.integral import int2e_c
 from math import isclose
 
