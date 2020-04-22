@@ -3,8 +3,9 @@ from mscf.mole.element_data import ELEMENTS_PROTON
 
 
 class Mole:
-    def __init__(self, atoms, basis):
+    def __init__(self, atoms, basis, charge=0):
         self.atoms = atoms
+        self.charge = charge
         self.basis_name = basis
         self.basis = []
         basis = get_basis(basis)
@@ -12,6 +13,7 @@ class Mole:
             self.basis.extend(format_basis(l, basis[l[0]]))
         self.basis_num = count_basis(self.basis)
         self.nuc = [[ELEMENTS_PROTON[atom[0]]] + atom[1:] for atom in self.atoms]
+        self.elec_num = sum([ELEMENTS_PROTON[atom[0]] for atom in self.atoms]) - self.charge
 
 
 def format_basis(atoms, basis):
