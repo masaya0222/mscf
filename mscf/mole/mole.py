@@ -1,5 +1,6 @@
 from mscf.basis.tools import get_basis
 from mscf.mole.element_data import ELEMENTS_PROTON
+import numpy as np
 
 
 class Mole:
@@ -14,6 +15,18 @@ class Mole:
         self.basis_num = count_basis(self.basis)
         self.nuc = [[ELEMENTS_PROTON[atom[0]]] + atom[1:] for atom in self.atoms]
         self.elec_num = sum([ELEMENTS_PROTON[atom[0]] for atom in self.atoms]) - self.charge
+        self.can_rhf = True
+        self.occ, self.occ_num = self.make_occ()
+
+    def make_occ(self):
+        occ = np.zeros(self.basis_num, dtype=int)
+        for i in range(self.elec_num//2):
+            occ[i] = 2
+        occ_num = i+1
+        if self.elec_num % 2 == 1:
+            occ[i+1] = 1
+            occ_num += 1
+        return occ, occ_num
 
 
 def format_basis(atoms, basis):
